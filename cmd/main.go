@@ -9,6 +9,7 @@ import (
 
 	"github.com/Weeping-Willow/tet/internal/app"
 	"github.com/Weeping-Willow/tet/internal/utils"
+	"github.com/spf13/cobra"
 )
 
 func main() {
@@ -27,5 +28,12 @@ func main() {
 
 	ctx = utils.ContextWithLogging(ctx, log)
 
-	app.MustNew(ctx)
+	appInstance := app.MustNew(ctx)
+
+	cmd := cobra.Command{}
+	cmd.AddCommand(appInstance.NewServerCommand())
+
+	if err := cmd.Execute(); err != nil {
+		log.Error("failed to execute command", slog.String("error", err.Error()))
+	}
 }
