@@ -36,7 +36,7 @@ func (a *App) NewServerCommand() *cobra.Command {
 		Short: "Start the API server",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := a.api.Start(); err != nil {
-				utils.LoggerFromContext(a.globalContext).Error(errors.Wrap(err, "run API server").Error(), nil)
+				utils.LoggerFromContext(a.globalContext).Error(errors.Wrap(err, "run API server").Error())
 				return
 			}
 		},
