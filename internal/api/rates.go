@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Weeping-Willow/tet/internal/utils"
@@ -71,6 +72,12 @@ func (a *API) currencyExchangeRateHistoryHandler() http.Handler {
 		if code == "" {
 			a.errorResponse(r.Context(), w, http.StatusBadRequest, "currency name is required")
 		}
+
+		if len(code) != 3 {
+			a.errorResponse(r.Context(), w, http.StatusBadRequest, "currency name must be 3 characters long")
+		}
+
+		code = strings.ToUpper(code)
 
 		ctx := utils.ContextWithLogging(r.Context(), utils.LoggerFromContext(r.Context()).With("code", code))
 
