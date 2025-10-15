@@ -3,16 +3,19 @@ package api
 import (
 	"context"
 
+	"github.com/Weeping-Willow/tet/internal/config"
 	"github.com/Weeping-Willow/tet/internal/utils"
 )
 
 type API struct {
 	globalCtx context.Context
+	cfg       config.Config
 }
 
-func New(ctx context.Context) *API {
+func New(ctx context.Context, cfg config.Config) *API {
 	return &API{
 		globalCtx: ctx,
+		cfg:       cfg,
 	}
 }
 
