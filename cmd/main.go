@@ -32,6 +32,7 @@ func main() {
 
 	cmd := cobra.Command{}
 	cmd.AddCommand(appInstance.NewServerCommand())
+	cmd.AddCommand(appInstance.NewFetchCommand())
 
 	if err := cmd.Execute(); err != nil {
 		log.Error("failed to execute command", slog.String("error", err.Error()))

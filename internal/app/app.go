@@ -5,14 +5,17 @@ import (
 
 	"github.com/Weeping-Willow/tet/internal/api"
 	"github.com/Weeping-Willow/tet/internal/config"
+	"github.com/Weeping-Willow/tet/internal/rates"
 	"github.com/Weeping-Willow/tet/internal/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 type App struct {
+	api         *api.API
+	rateService rates.Service
+
 	globalContext context.Context
-	api           *api.API
 }
 
 func MustNew(ctx context.Context) *App {
@@ -24,8 +27,15 @@ func MustNew(ctx context.Context) *App {
 
 	apiServer := api.New(ctx, cfg)
 
+	rateFetcher := struct{}{}
+	rateRepo := struct{}{}
+
+	rateService := rates.NewService(rateRepo, rateFetcher)
+
 	return &App{
-		api:           apiServer,
+		api:         apiServer,
+		rateService: rateService,
+
 		globalContext: ctx,
 	}
 }
@@ -37,6 +47,19 @@ func (a *App) NewServerCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := a.api.Start(); err != nil {
 				utils.LoggerFromContext(a.globalContext).Error(errors.Wrap(err, "run API server").Error())
+				return
+			}
+		},
+	}
+}
+
+func (a *App) NewFetchCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "fetch",
+		Short: "Fetch and update currency exchange rates",
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := a.rateService.UpdateRates(a.globalContext); err != nil {
+				utils.LoggerFromContext(a.globalContext).Error(errors.Wrap(err, "update rates").Error())
 				return
 			}
 		},
