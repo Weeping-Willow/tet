@@ -26,12 +26,7 @@ func (a *API) Start() error {
 	logger := utils.LoggerFromContext(a.globalCtx)
 	logger.Info("Starting API server")
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
-	})
+	mux := a.newHandler()
 
 	server := &http.Server{
 		Addr:    ":" + a.cfg.App.PortHTTP,
@@ -62,4 +57,15 @@ func (a *API) Start() error {
 
 		return nil
 	}
+}
+
+func (a *API) newHandler() http.Handler {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
+	})
+
+	return mux
 }
