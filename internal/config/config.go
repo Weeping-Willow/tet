@@ -9,11 +9,16 @@ import (
 )
 
 type Config struct {
-	App App
+	App              App
+	ExternalServices ExternalServices
 }
 
 type App struct {
 	PortHTTP string `envconfig:"PORT_HTTP" default:"8080"`
+}
+
+type ExternalServices struct {
+	EcbRssURL string `envconfig:"ECB_RSS_URL" default:"https://www.bank.lv/vk/ecb_rss.xml"`
 }
 
 func New() (Config, error) {

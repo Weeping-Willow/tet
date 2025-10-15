@@ -27,7 +27,7 @@ func MustNew(ctx context.Context) *App {
 
 	apiServer := api.New(ctx, cfg)
 
-	rateFetcher := struct{}{}
+	rateFetcher := rates.NewEcbRssFetcher(cfg)
 	rateRepo := struct{}{}
 
 	rateService := rates.NewService(rateRepo, rateFetcher)
