@@ -16,14 +16,18 @@ type Service interface {
 }
 
 type CurrencyRate struct {
-	Rate     float64 `json:"rate"`
-	Currency string  `json:"currency"`
-	Date     string  `json:"date"`
+	Currency string            `json:"currency"`
+	DayRates []CurrencyRateDay `json:"day_rates"`
+}
+
+type CurrencyRateDay struct {
+	Rate float64 `json:"rate"`
+	Date string  `json:"date"`
 }
 
 var preselectedCurrencies = []string{
 	"USD",
-	"EUR",
+	"PLN",
 	"GBP",
 	"JPY",
 	"AUD",
