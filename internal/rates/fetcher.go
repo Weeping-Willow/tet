@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Weeping-Willow/tet/internal/config"
+	"github.com/Weeping-Willow/tet/internal/objects"
 	"github.com/pkg/errors"
 )
 
@@ -29,35 +30,35 @@ func NewEcbRssFetcher(cfg config.Config) Fetcher {
 	}
 }
 
-func (e ecbRSSFetcher) GetCurrencyRate(ctx context.Context, currencyCode string) (CurrencyRate, error) {
+func (e ecbRSSFetcher) GetCurrencyRate(ctx context.Context, currencyCode string) (objects.CurrencyRate, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, e.url, nil)
 	if err != nil {
-		return CurrencyRate{}, err
+		return objects.CurrencyRate{}, err
 	}
 
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return CurrencyRate{}, errors.Wrap(err, "fetching currency")
+		return objects.CurrencyRate{}, errors.Wrap(err, "fetching currency")
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return CurrencyRate{}, errors.Errorf("unexpected status code: %d", resp.StatusCode)
+		return objects.CurrencyRate{}, errors.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	if resp.Body == nil {
-		return CurrencyRate{}, errors.New("empty response body")
+		return objects.CurrencyRate{}, errors.New("empty response body")
 	}
 
 	defer resp.Body.Close()
 
 	var rss XMLEcbRss
 	if err := xml.NewDecoder(resp.Body).Decode(&rss); err != nil {
-		return CurrencyRate{}, errors.Wrap(err, "decoding xml")
+		return objects.CurrencyRate{}, errors.Wrap(err, "decoding xml")
 	}
 
-	c := CurrencyRate{
+	c := objects.CurrencyRate{
 		Currency: currencyCode,
-		DayRates: make([]CurrencyRateDay, 0, len(rss.Channel.Items)),
+		DayRates: make([]objects.CurrencyRateDay, 0, len(rss.Channel.Items)),
 	}
 
 	for _, item := range rss.Channel.Items {
@@ -75,12 +76,17 @@ func (e ecbRSSFetcher) GetCurrencyRate(ctx context.Context, currencyCode string)
 			rate := match[2]
 			rateConverted, err := strconv.ParseFloat(rate, 64)
 			if err != nil {
-				return CurrencyRate{}, errors.Wrap(err, "parsing rate")
+				return objects.CurrencyRate{}, errors.Wrap(err, "parsing rate")
 			}
 
-			c.DayRates = append(c.DayRates, CurrencyRateDay{
+			parsedTime, err := time.Parse(time.RFC1123Z, item.PubDate)
+			if err != nil {
+				return objects.CurrencyRate{}, errors.Wrap(err, "parsing date")
+			}
+
+			c.DayRates = append(c.DayRates, objects.CurrencyRateDay{
 				Rate: rateConverted,
-				Date: item.PubDate,
+				Date: parsedTime,
 			})
 
 			break

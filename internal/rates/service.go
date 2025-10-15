@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Weeping-Willow/tet/internal/objects"
 	"github.com/Weeping-Willow/tet/internal/utils"
 	"github.com/pkg/errors"
 )
@@ -16,7 +17,7 @@ type service struct {
 }
 
 type fetcherResponse struct {
-	CurrencyRate CurrencyRate
+	CurrencyRate objects.CurrencyRate
 	Error        error
 }
 
@@ -29,25 +30,27 @@ func NewService(repo Repository, fetcher Fetcher) Service {
 }
 
 func (s service) UpdateRates(ctx context.Context) error {
-	utils.LoggerFromContext(ctx).Info("Updating rates")
+	logger := utils.LoggerFromContext(ctx)
+	logger.Info("Updating rates")
 
-	rates, errs, err := s.getLatestRates(ctx, preselectedCurrencies)
+	rates, _, err := s.getLatestRates(ctx, preselectedCurrencies)
 	if err != nil {
 		return errors.Wrap(err, "get latest rates")
 	}
 
-	fmt.Println("Rates:", rates)
-	fmt.Println("Errors:", errs)
+	logger.Info(fmt.Sprintf("Saving rates"))
 
-	// Save rates to repository
+	err = s.repo.UpdateRates(ctx, rates)
+	if err != nil {
+		return errors.Wrap(err, "update rates in repo")
+	}
 
-	// save to repo update stats
+	logger.Info("Rates saved successfully")
 
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
-func (s service) getLatestRates(ctx context.Context, currencyCodes []string) (rates []CurrencyRate, errs []string, err error) {
+func (s service) getLatestRates(ctx context.Context, currencyCodes []string) (rates []objects.CurrencyRate, individualFetchingErrors []string, err error) {
 	if len(currencyCodes) == 0 {
 		return nil, nil, errors.New("no currency codes provided")
 	}
@@ -96,18 +99,18 @@ func (s service) getLatestRates(ctx context.Context, currencyCodes []string) (ra
 
 	for resp := range ch {
 		if resp.Error != nil {
-			errs = append(errs, resp.Error.Error())
+			individualFetchingErrors = append(individualFetchingErrors, resp.Error.Error())
 			continue
 		}
 
 		rates = append(rates, resp.CurrencyRate)
 	}
 
-	logger.Info(fmt.Sprintf("Fetched %d currency rates, %d suceded, %d failed", len(currencyCodes), len(rates), len(errs)))
+	logger.Info(fmt.Sprintf("Fetched %d currency rates, %d suceded, %d failed", len(currencyCodes), len(rates), len(individualFetchingErrors)))
 
-	if len(rates) == 0 && len(errs) > 0 {
-		return nil, errs, errors.New("failed to fetch any currency rates")
+	if len(rates) == 0 && len(individualFetchingErrors) > 0 {
+		return nil, individualFetchingErrors, errors.New("failed to fetch any currency rates")
 	}
 
-	return rates, errs, nil
+	return rates, individualFetchingErrors, nil
 }
