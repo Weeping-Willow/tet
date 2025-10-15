@@ -67,5 +67,8 @@ func (a *API) newHandler() http.Handler {
 		_, _ = w.Write([]byte("OK"))
 	})
 
+	mux.Handle("/api/v1/rates/latest", a.latestExchangeRatesHandler())
+	mux.Handle("/api/v1/rates/history", a.currencyExchangeRateHistoryHandler())
+
 	return mux
 }
