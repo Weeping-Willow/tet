@@ -38,12 +38,11 @@ func MustNew(ctx context.Context) *App {
 		panic(err)
 	}
 
-	apiServer := api.New(ctx, cfg)
-
 	rateFetcher := rates.NewEcbRssFetcher(cfg)
-	rateRepo := storage.NewRateRepository(db)
-
+	rateRepo := storage.NewRates(db)
 	rateService := rates.NewService(rateRepo, rateFetcher)
+
+	apiServer := api.New(ctx, rateService, cfg)
 
 	return &App{
 		api:         apiServer,

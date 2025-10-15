@@ -6,17 +6,22 @@ import (
 	"time"
 
 	"github.com/Weeping-Willow/tet/internal/config"
+	"github.com/Weeping-Willow/tet/internal/rates"
 	"github.com/Weeping-Willow/tet/internal/utils"
 	"github.com/pkg/errors"
 )
 
 type API struct {
+	rateService rates.Service
+
 	globalCtx context.Context
 	cfg       config.Config
 }
 
-func New(ctx context.Context, cfg config.Config) *API {
+func New(ctx context.Context, rateService rates.Service, cfg config.Config) *API {
 	return &API{
+		rateService: rateService,
+
 		globalCtx: ctx,
 		cfg:       cfg,
 	}
@@ -68,7 +73,7 @@ func (a *API) newHandler() http.Handler {
 	})
 
 	mux.Handle("/api/v1/rates/latest", a.latestExchangeRatesHandler())
-	mux.Handle("/api/v1/rates/history", a.currencyExchangeRateHistoryHandler())
+	mux.Handle("/api/v1/rates/history/{code}", a.currencyExchangeRateHistoryHandler())
 
 	return a.loggingMiddleware(mux)
 }

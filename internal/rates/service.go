@@ -114,3 +114,25 @@ func (s service) getLatestRates(ctx context.Context, currencyCodes []string) (ra
 
 	return rates, individualFetchingErrors, nil
 }
+
+func (s service) GetLatestRates(ctx context.Context) ([]objects.CurrencyRate, error) {
+	res, err := s.repo.GetLatestRates(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "get latest rates from repo")
+	}
+
+	return res, nil
+}
+
+func (s service) GetCurrencyHistory(ctx context.Context, currencyCode string) (objects.CurrencyRate, error) {
+	if currencyCode == "" {
+		return objects.CurrencyRate{}, errors.New("currency code is empty")
+	}
+
+	res, err := s.repo.GetCurrencyHistory(ctx, currencyCode)
+	if err != nil {
+		return objects.CurrencyRate{}, errors.Wrapf(err, "get rates for currency %s from repo", currencyCode)
+	}
+
+	return res, nil
+}

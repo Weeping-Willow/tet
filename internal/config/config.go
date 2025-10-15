@@ -57,6 +57,7 @@ func NewDb(cfg Config) (*sqlx.DB, error) {
 	mysqlConfig.DBName = cfg.DB.DatabaseName
 	mysqlConfig.AllowNativePasswords = true
 	mysqlConfig.InterpolateParams = true
+	mysqlConfig.ParseTime = true
 
 	db, err := sqlx.Connect("mysql", mysqlConfig.FormatDSN())
 	if err != nil {
