@@ -1,4 +1,41 @@
 services:
+  rate-fetch:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    container_name: rate-fetch
+    command: "/app fetch"
+    environment:
+      DB_NAME: "rate_db"
+      DB_USER: "user"
+      DB_PASSWORD: "password"
+      DB_HOST: "rate-db"
+      DB_PORT: "3306"
+    depends_on:
+      rate-db:
+        condition: service_healthy
+
+  rate-api:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    container_name: rate-api
+    command: "/app server"
+    environment:
+      DB_NAME: "rate_db"
+      DB_USER: "user"
+      DB_PASSWORD: "password"
+      DB_HOST: "rate-db"
+      DB_PORT: "3306"
+      HTTP_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      rate-db:
+        condition: service_healthy
+      rate-fetch:
+        condition: service_completed_successfully
+
   rate-db:
     image: mariadb:10.5
     container_name: rate-db
@@ -11,6 +48,12 @@ services:
       MYSQL_PASSWORD: password
     volumes:
       - rate-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      timeout: 20s
+      retries: 10
+      interval: 5s
+      start_period: 30s
 
 volumes:
   rate-db-data:
