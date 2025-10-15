@@ -1,0 +1,16 @@
+services:
+  rate-db:
+    image: mariadb:10.5
+    container_name: rate-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rate_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - rate-db-data:/var/lib/mysql
+
+volumes:
+  rate-db-data:

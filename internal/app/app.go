@@ -6,6 +6,7 @@ import (
 	"github.com/Weeping-Willow/tet/internal/api"
 	"github.com/Weeping-Willow/tet/internal/config"
 	"github.com/Weeping-Willow/tet/internal/rates"
+	"github.com/Weeping-Willow/tet/internal/repository"
 	"github.com/Weeping-Willow/tet/internal/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -21,14 +22,20 @@ type App struct {
 func MustNew(ctx context.Context) *App {
 	cfg, err := config.New()
 	if err != nil {
-		utils.LoggerFromContext(ctx).Error(errors.Wrap(err, "load config").Error(), nil)
+		utils.LoggerFromContext(ctx).Error(errors.Wrap(err, "load config").Error())
+		panic(err)
+	}
+
+	db, err := config.NewDb(cfg)
+	if err != nil {
+		utils.LoggerFromContext(ctx).Error(errors.Wrap(err, "connect to database").Error())
 		panic(err)
 	}
 
 	apiServer := api.New(ctx, cfg)
 
 	rateFetcher := rates.NewEcbRssFetcher(cfg)
-	rateRepo := struct{}{}
+	rateRepo := repository.NewRateRepository(db)
 
 	rateService := rates.NewService(rateRepo, rateFetcher)
 
